@@ -13,7 +13,17 @@ module.exports = function (snooper_options) {
             this.options = options
             this.start_page = start_page
             this.is_closed = false
-            this.wait_interval = 7000 // 7 seconds between requests to avoid hitting Reddit's rate limit of 10 requests per minute
+
+            // Automatically rate limit to 10 requests per minute minimum (6s between requests minimum)
+            this.requests_per_minuite = snooper_options.api_requests_per_minute || 10;
+            let requestInterval = (1000 * 60) / this.requests_per_minuite;
+
+            if (requestInterval < 6000) {
+                console.warn(`User defined requests per minute of ${this.requests_per_minuite} is too high, defaulting to the max of 10 requests per minute minimum`)
+                requestInterval = 6000;
+            }
+
+            this.wait_interval = requestInterval
             this.retries = 3
 
             this.once("newListener", (event, listener) => {
@@ -137,7 +147,9 @@ module.exports = function (snooper_options) {
                     }
                 }
 
+                setTimeout(() => {
                 this.start()
+                }, this.wait_interval)
             })
         }
     }
@@ -152,7 +164,9 @@ module.exports = function (snooper_options) {
 
             console.log({time: Date.now()})
             this.get_items(this.start_page, '', null, until_name, (first_comment_retrieved) => {
-                this._start(first_comment_retrieved)
+                setTimeout(() => {
+                    this._start(first_comment_retrieved)
+                }, this.wait_interval);
             }, (err, data) => {
                 if (err) return this.emit('error', err)
                 data.map((item) => this.emit(this.item_type, item))
