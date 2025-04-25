@@ -129,8 +129,6 @@ module.exports = function (snooper_options) {
 
         start() {
             if (this.is_closed) return
-
-            console.log({time: Date.now()})
             this.get_items(this.start_page, '', this.limit, '', null, (err, data) => {
                 if (err) return this.emit('error', err)
 
@@ -161,8 +159,6 @@ module.exports = function (snooper_options) {
 
         _start(until_name) {
             if (this.is_closed) return
-
-            console.log({time: Date.now()})
             this.get_items(this.start_page, '', null, until_name, (first_comment_retrieved) => {
                 setTimeout(() => {
                     this._start(first_comment_retrieved)
